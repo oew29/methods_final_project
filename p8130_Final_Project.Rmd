@@ -1,0 +1,108 @@
+---
+title: "Final Project"
+author: "Weijia Xiong"
+date: "12/2/2019"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    toc_depth: 4
+mainfont: Times New Roman
+fontsize: 11pt
+geometry: "margin=1in"
+header-includes:
+    - \usepackage{setspace}
+    - \doublespacing
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(readr)
+library(readxl)
+library(faraway)
+library(broom)
+library(dplyr)
+library(kableExtra)
+library(knitr)
+library(modelr)
+library(MASS)
+library(arsenal)
+
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE,
+	results = "asis"
+# 	fig.width = 10, 
+#   fig.height = 8,
+#   out.width = "90%"
+)
+```
+
+## Abstract
+
+## Introduction (context, background of the problem) 
+
+## Methods (data description and statistical methods)
+### 1. Data exploration
+
+```{r}
+## load and tidy the data
+lawsuit = read_csv("./data/lawsuit.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    dept = recode(dept, 
+                  "1" = "Biochemistry",
+                  "2" = "Physiology",
+                  "3" = "Genetics",
+                  "4" = "Pediatrics",
+                  "5" = "Medicine",
+                  "6" = "Surgery"),
+    gender = recode(gender,
+                    "1" = "Male", 
+                    "0" = "Female"),
+    clin = recode(clin, 
+                  "1" = "Clinical",
+                  "0" = "Research"),
+    cert = recode(cert, 
+                  "1" = "Board certified", 
+                  "0" = "Not certified"),
+    rank = recode(rank, 
+                  "1" = "Assistant",
+                  "2" = "Associate", 
+                  "3" = "Full professor")
+  )
+```
+
+```{r}
+## classified by gender
+my_controls = tableby.control(
+               total = T,
+               test = F,  # No test p-values yet
+               numeric.stats = c("meansd", "medianq1q3", "range", "Nmiss2"),
+               cat.stats = c("countpct", "Nmiss2"),
+               stats.labels = list(
+                 meansd = "Mean (SD)",
+                 medianq1q3 = "Median (IQR)",
+                 range = "Min - Max",
+                 Nmiss2 = "Missing",
+                 countpct = "N (%)"))
+
+tab2 = tableby( gender ~ prate + exper + sal94 + sal95, 
+                data = lawsuit, control = my_controls)
+
+summary(tab2, title = "Data Description...", 
+        #labelTranslations = my_labels, 
+        text = T)
+
+ ## my_labels
+
+```
+
+## Results
+
+## Conclusions/Discussion
+
+## Figures and tables
+## References
+## Appendix
