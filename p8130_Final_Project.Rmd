@@ -1,7 +1,6 @@
 ---
 title: "Final Project"
-author: "Weijia Xiong"
-date: "12/2/2019"
+author: "Oilivia Wagner| Weijia Xiong | Wurongyan Zhang | Yiling Yang "
 output: 
   pdf_document:
     latex_engine: xelatex
@@ -27,26 +26,21 @@ library(knitr)
 library(modelr)
 library(MASS)
 library(arsenal)
+library(psych)
+library(gridExtra)
+library(corrplot)
 
 knitr::opts_chunk$set(
 	echo = FALSE,
 	message = FALSE,
 	warning = FALSE,
-	results = "asis"
-# 	fig.width = 10, 
-#   fig.height = 8,
-#   out.width = "90%"
+	results = "asis",
+  fig.width = 10, 
+	fig.height = 4,
+	fig.align = "center",
+	out.width = "80%"
 )
-```
 
-## Abstract
-
-## Introduction (context, background of the problem) 
-
-## Methods (data description and statistical methods)
-### 1. Data exploration
-
-```{r}
 ## load and tidy the data
 lawsuit = read_csv("./data/lawsuit.csv") %>% 
   janitor::clean_names() %>% 
@@ -72,7 +66,197 @@ lawsuit = read_csv("./data/lawsuit.csv") %>%
                   "2" = "Associate", 
                   "3" = "Full professor")
   )
+
+lawsuit <- lawsuit %>% mutate(sal9495 = (sal94+sal95)/2)
 ```
+
+\pagebreak
+## Abstract
+
+## Introduction
+
+In our project, we examined the whether gender discrimination existed in setting salaries for people in the academia or higher education institutions.
+
+## Exploratory data analysis
+
+Data used in our studies were collected from 261 individuals who work in the academia or higher education institutions. The raw dataset contains following features. 
+
+- **Dept**: 1= Biochemistry/Molecular Biology 2= Physiology 3= Genetics 4= Pediatrics 5= Medicine 6= Surgery 
+- **Gender**: 1= Male, 0= Female
+- **Clin**: 1= Primarily clinical emphasis, 0= Primarily research emphasis
+- **Cert**: 1= Board certified, 0= not certified
+- **Prate**: Publication rate (# publications on cv) / (# years between CV date and MD date) 
+- **Exper**: # years since obtaining MD
+- **Rank**: 1= Assistant, 2= Associate, 3= Full professor (a proxy for productivity)
+- **Sal94**: Salary in academic year 1994
+- **Sal95**: Salary after increment to Sal94
+
+Table 1 contains the summary of variables in the dataset. Fortunately, there are no missing values in our dataset. We then need to examine each interested variable against the main effect and main interest.
+
+**Department**
+
+Fig 1.1. shows that the gender ratios in the department of Genetics and Physiology are very balanced, compared with department of Medicine  and Surgery, which are very imbalanced. The differences in department of Biochemistry and Pediatrics are moderate. Fig 1.2 includes our main interest the salary into account. It seems that across all department, male earn more than female do. However, before further analysis, we cannot tell whether those difference are significant.
+
+```{r}
+p1 <- ggplot(aes(x=dept,fill=gender),data=lawsuit)+
+  geom_bar(position=position_dodge())+
+  geom_text(stat = 'count',vjust=1.6, position = position_dodge(0.9),aes(x = dept, label = stat(count)))+
+  ggtitle("Fig.1.1 Gender Distribution of Department")+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  xlab("Department") +
+  ylim(0,60)+
+  scale_fill_brewer(palette="Greens")
+
+
+p2 <- ggplot(aes(x=dept,y=sal9495,fill=gender),data=lawsuit) +
+  geom_boxplot()+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Fig.1.2 Average Salary across Department & Gender") +
+  ylab("Average Salary")+
+  xlab("Department")
+
+grid.arrange(p1,p2,ncol=2)
+```
+
+**Clinical or Research Division**
+
+Fig 2.1 shows that in either division, there are more male than female, especially the clinical division. Regarding salar, again, male in either division earned more than female do.
+
+```{r}
+p1 <- ggplot(aes(x=clin,fill=gender),data=lawsuit)+
+  geom_bar(position=position_dodge())+
+  geom_text(stat = 'count',vjust=1.6, position = position_dodge(0.9),aes(x = clin, label = stat(count)))+
+  ggtitle("Fig.2.1 Gender Distribution across Division")+
+  theme_minimal()+
+  xlab("") +
+  ylim(0,120)+
+  scale_fill_brewer(palette="Greens")
+
+p2 <- ggplot(aes(x=clin,y=sal9495,fill=gender),data=lawsuit) +
+  geom_boxplot()+
+  theme_minimal()+
+  ggtitle("Fig.2.2 Average Salary across clin & gender") +
+  ylab("Average Salary")+
+  xlab("")
+
+grid.arrange(p1,p2,ncol=2)
+```
+
+**Certfication status**
+
+Fig.3. shows that the amount of certified male outnumbers surely the amount of certified female. However, for those without certification, theose are just even. For the salar, male again earn more than female do regardless of his or her certification status.
+
+
+```{r}
+p1 <- ggplot(aes(x=cert,fill=gender),data=lawsuit)+
+  geom_bar(position=position_dodge())+
+  geom_text(stat = 'count',vjust=1.6, position = position_dodge(0.9),aes(x = cert, label = stat(count)))+
+  ggtitle("Fig.3.1 Gender Distribution against Certification Status")+
+  theme_minimal()+
+  xlab("") +
+  ylim(0,120)+
+  scale_fill_brewer(palette="Greens")
+
+p2 <- ggplot(aes(x=cert,y=sal9495,fill=gender),data=lawsuit) +
+  geom_boxplot()+
+  theme_minimal()+
+  ggtitle("Fig.3.2 Average Salary across Cert & Gender") +
+  ylab("Average Salary")+
+  xlab("")
+
+grid.arrange(p1,p2,ncol=2)
+```
+
+
+**Prate**
+
+Fig 4.1 shows the density plot of publication rate for both male and female. No obvious difference was observed. Fig 4.2 implies that there might be linear trend between average salary and publication rate.However, it's hard to tell whetehr there is any difference on the effect on the salar regarding the gender.s 
+
+```{r}
+p1 <- ggplot(data = lawsuit,aes(x=prate,color=gender,fill=gender))+
+  geom_density(linetype="dashed",alpha=0.4)+
+  ggtitle("Fig.4.1 Density of Publication Rate against Gender")+
+  ylab("")+
+  xlab("Publication Rate")
+
+
+p2 <- ggplot(data = lawsuit,aes(x=prate,y=sal9495,color=gender))+
+  geom_point()+
+  ggtitle("Fig.4.2 Average Salary against Prate across Gender")+
+  xlab("Prate")+
+  ylab("Average Salary")
+
+grid.arrange(p1,p2,ncol=2)
+```
+
+**Exper**
+
+Fig.5.1 shows that the densities of experience year for both male and female are both very skewed, and seems that female have a more skewed trend. Although there are not obvious linear trend between salar and experience year, the salar for male spread more widly than those for female and individual with high salar are dominately male.
+
+```{r}
+#geom_vline(data = prate_mean,aes(xintercept=mean,color=gender,linetype="dashed",size=0.5))+
+
+p1 <- ggplot(data = lawsuit,aes(x=exper,color=gender,fill=gender))+
+  geom_density(linetype="dashed",alpha=0.4)+
+  ggtitle("Fig 5.1 Density of experience Year against Gender")+
+  ylab("")+
+  xlab("Experience Year")
+
+
+p2 <- ggplot(data = lawsuit,aes(x=exper,y=sal9495,color=gender))+
+  geom_point()+
+  ggtitle("Fig 5.2 Average Salary against Experience Year across Gender")+
+  xlab("Experience Year")+
+  ylab("Average Salary")
+
+grid.arrange(p1,p2,ncol=2)
+```
+
+**Rank**
+
+Fig 6.1 shows that there are many female assistant professor and less associate and full professor  than male. Without surprising, in either rank, male earn more than female.
+
+```{r}
+p1 <- ggplot(aes(x=rank,fill=gender),data=lawsuit)+
+  geom_bar(position=position_dodge())+
+  geom_text(stat = 'count',vjust=1.6, position = position_dodge(0.9),aes(x = rank, label = stat(count)))+
+  ggtitle("Fig.6.1 Gender Distribution against Rank")+
+  theme_minimal()+
+  xlab("") +
+  ylim(0,120)+
+  scale_fill_brewer(palette="Greens")
+
+p2 <- ggplot(aes(x=rank,y=sal9495,fill=gender),data=lawsuit) +
+  geom_boxplot()+
+  theme_minimal()+
+  ggtitle("Fig.6.2 Average Salary across Rank & Gender") +
+  ylab("Average Salary")+
+  xlab("")
+
+grid.arrange(p1,p2,ncol=2)
+```
+
+Lastly, after examing the correlation matrix, we can see that there are some highly related variables  ($r > 80\%$). They are 1. Department (Dept) and Publish Rate (Prate) and 2. Clin and Prate. Some have morderate correlation such as 1. Experience Year (Exper) annd Cert (Certification status) and 2.Department (Dept) and Clin.
+
+```{r}
+res <- cor(read_csv("./data/lawsuit.csv")[,-c(1,9,10)])
+corrplot(res, method = "number",type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+```
+
+Those imply potential collinearities. As we go through those variables, there are some outliers. In later section, we will examine further about them.
+
+## Results
+
+## Conclusions
+
+## Discussion
+
+\pagebreak
+## Figures and tables
+
 
 ```{r}
 ## classified by gender
@@ -88,21 +272,16 @@ my_controls = tableby.control(
                  Nmiss2 = "Missing",
                  countpct = "N (%)"))
 
-tab2 = tableby( gender ~ prate + exper + sal94 + sal95, 
+tab2 = tableby( gender ~ dept+clin+cert+prate + exper + rank+sal94 + sal95, 
                 data = lawsuit, control = my_controls)
 
-summary(tab2, title = "Data Description...", 
+summary(tab2, title = "Table 1", 
         #labelTranslations = my_labels, 
         text = T)
-
- ## my_labels
-
 ```
 
-## Results
-
-## Conclusions/Discussion
-
-## Figures and tables
+\pagebreak
 ## References
+
+\pagebreak
 ## Appendix
