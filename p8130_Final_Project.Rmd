@@ -34,13 +34,31 @@ knitr::opts_chunk$set(
 	echo = FALSE,
 	message = FALSE,
 	warning = FALSE,
-	results = "asis",
   fig.width = 10, 
-	fig.height = 4,
+	fig.height = 6,
 	fig.align = "center",
 	out.width = "80%"
 )
 
+
+kable  =  function(data) {
+    knitr::kable(
+    data,
+    align = rep('c', 15),
+    longtable = F, 
+    booktabs = T, 
+    escape = T,
+    digits = 4
+  ) %>% 
+  kable_styling(
+    latex_options = c("striped","hold_position","scale_down","repeat_header"),
+    font_size = 10
+  )
+}
+```
+
+
+```{r}
 ## load and tidy the data
 lawsuit = read_csv("./data/lawsuit.csv") %>% 
   janitor::clean_names() %>% 
@@ -51,23 +69,28 @@ lawsuit = read_csv("./data/lawsuit.csv") %>%
                   "3" = "Genetics",
                   "4" = "Pediatrics",
                   "5" = "Medicine",
-                  "6" = "Surgery"),
+                  "6" = "Surgery") %>% as.factor(),
     gender = recode(gender,
                     "1" = "Male", 
-                    "0" = "Female"),
+                    "0" = "Female") %>% as.factor(),
     clin = recode(clin, 
                   "1" = "Clinical",
-                  "0" = "Research"),
+                  "0" = "Research") %>% as.factor(),
     cert = recode(cert, 
                   "1" = "Board certified", 
-                  "0" = "Not certified"),
+                  "0" = "Not certified") %>% as.factor(),
     rank = recode(rank, 
                   "1" = "Assistant",
                   "2" = "Associate", 
-                  "3" = "Full professor")
+                  "3" = "Full professor") %>% as.factor()
   )
 
-lawsuit <- lawsuit %>% mutate(sal9495 = (sal94+sal95)/2)
+lawsuit = 
+  lawsuit %>% 
+  mutate(
+  sal9495 = log(sal94 + sal95)/2,
+  sal_original = (sal94 + sal95)/2
+  )
 ```
 
 \pagebreak
@@ -92,6 +115,29 @@ Data used in our studies were collected from 261 individuals who work in the aca
 - **Sal95**: Salary after increment to Sal94
 
 Table 1 contains the summary of variables in the dataset. Fortunately, there are no missing values in our dataset. We then need to examine each interested variable against the main effect and main interest.
+
+**Salary**
+```{r}
+
+p1 = 
+  lawsuit %>% 
+  ggplot(aes(x = sal_original, y = ..density..)) +
+  geom_histogram(binwidth = 10000) +
+  geom_density(alpha = 0.3,fill = "red") +
+  labs(title = 'Salary Distribution')
+
+
+p2 =
+  lawsuit %>% 
+  ggplot(aes(x = sal9495, y = ..density..)) +
+  geom_histogram(binwidth = 0.05) +
+  geom_density(alpha = 0.3,fill = "red") +
+  labs(title = 'Salary Distribution(After log transformation)')
+
+grid.arrange(p1,p2,ncol = 2)
+
+```
+
 
 **Department**
 
@@ -248,6 +294,134 @@ corrplot(res, method = "number",type = "upper", order = "hclust",
 
 Those imply potential collinearities. As we go through those variables, there are some outliers. In later section, we will examine further about them.
 
+## Method
+
+```{r}
+reg1 = lm(sal9495 ~ gender, data = lawsuit)
+summary(reg1)
+```
+
+
+```{r}
+fit1 = lm(sal9495 ~ gender + dept, data = lawsuit)
+summary(fit1)
+```
+
+```{r}
+fit2 = lm(sal9495 ~ gender + clin, data = lawsuit)
+summary(fit2)
+
+fit3 = lm(sal9495 ~ gender + cert, data = lawsuit)
+summary(fit3)
+
+fit4 = lm(sal9495 ~ gender + prate, data = lawsuit)
+summary(fit4)
+
+fit5 = lm(sal9495 ~ gender + exper, data = lawsuit)
+summary(fit5)
+
+fit6 = lm(sal9495 ~ gender + rank, data = lawsuit)
+summary(fit6)
+```
+
+```{r}
+reg2 = lm(sal9495 ~ gender + dept, data = lawsuit)
+summary(reg2)
+```
+
+
+
+
+```{r}
+fit1 = lm(sal9495 ~ gender + dept + clin, data = lawsuit)
+summary(fit1)
+
+fit2 = lm(sal9495 ~ gender + dept + cert, data = lawsuit)
+summary(fit2)
+
+fit3 = lm(sal9495 ~ gender + dept + prate, data = lawsuit)
+summary(fit3)
+
+fit4 = lm(sal9495 ~ gender + dept + exper, data = lawsuit)
+summary(fit4)
+
+fit5 = lm(sal9495 ~ gender + dept + rank, data = lawsuit)
+summary(fit5)
+```
+
+
+```{r}
+reg3 = lm(sal9495 ~ gender + dept + clin + cert  + exper, data = lawsuit)
+summary(reg3)
+
+```
+
+
+Add interaction
+```{r}
+fit1 = lm(sal9495 ~ gender * exper + dept + clin + cert, data = lawsuit)
+summary(fit1)
+```
+
+```{r}
+fit2 = lm(sal9495 ~ gender * dept +  exper  + clin + cert, data = lawsuit)
+summary(fit2)
+```
+
+
+
+```{r}
+fit3 = lm(sal9495 ~ gender * clin +  exper + cert + dept, data = lawsuit)
+summary(fit3)
+```
+
+```{r}
+fit4 = lm(sal9495 ~ gender * cert +  exper + clin + dept, data = lawsuit)
+summary(fit4)
+```
+
+
+Interaction: gender * exper significant.
+
+
+Final Model:
+```{r}
+final_model = lm(sal9495 ~ gender * exper + dept + clin + cert, data = lawsuit)
+summary(final_model)
+par(mfrow = c(2, 2))
+plot(final_model)
+
+influence.measures(final_model) %>% 
+  summary() %>% kable()
+
+```
+
+Remove outlier
+```{r}
+newlawsuit = lawsuit[-184,]
+final_model_without184 = lm(sal9495 ~ gender * exper + dept + clin + cert, data = newlawsuit)
+summary(final_model_without184 )
+plot(final_model_without184)
+```
+
+Stratification: 
+```{r}
+male_data = newlawsuit %>% filter(gender == "Male") 
+male_model = lm(sal9495 ~ exper + dept + clin + cert, data = male_data)
+summary(male_model)
+par(mfrow = c(2, 2))
+plot(male_model)
+```
+
+
+```{r}
+female_data = newlawsuit %>% filter(gender == "Female") 
+female_model = lm(sal9495 ~ exper + dept + clin + cert, data = female_data)
+summary(female_model)
+par(mfrow = c(2, 2))
+plot(female_model)
+```
+
 ## Results
 
 ## Conclusions
@@ -258,11 +432,11 @@ Those imply potential collinearities. As we go through those variables, there ar
 ## Figures and tables
 
 
-```{r}
+```{r, results = "asis"}
 ## classified by gender
 my_controls = tableby.control(
                total = T,
-               test = F,  # No test p-values yet
+               test = T,  # No test p-values yet
                numeric.stats = c("meansd", "medianq1q3", "range", "Nmiss2"),
                cat.stats = c("countpct", "Nmiss2"),
                stats.labels = list(
@@ -275,9 +449,31 @@ my_controls = tableby.control(
 tab2 = tableby( gender ~ dept+clin+cert+prate + exper + rank+sal94 + sal95, 
                 data = lawsuit, control = my_controls)
 
-summary(tab2, title = "Table 1", 
-        #labelTranslations = my_labels, 
-        text = T)
+my_labels = list(dept= "Department",
+                 clin = "Clinical",
+                 cert = "Certified",
+                 prate = "Publication Rate",
+                 exper = "Years since obtaining MD",
+                 rank = "Rank",
+                 sal94 = "Salary in academic year 1994",
+                 sal95 = "Salary after increment to Sal94",
+                 gender = "Gender(%)")
+
+summary(tab2, title = "Table 1:  Summary of All Variables", 
+        labelTranslations = my_labels, 
+        text = T) %>% 
+  knitr::kable(
+    align = rep('c', 15),
+    longtable = T, 
+    booktabs = T, 
+    escape = T,
+    digits = 2
+  ) %>% 
+  kable_styling(
+    latex_options = c("striped", "hold_position","repeat_header","scale_down"),
+    full_width = T ,
+    font_size = 10
+  )
 ```
 
 \pagebreak
