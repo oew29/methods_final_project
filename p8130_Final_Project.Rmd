@@ -118,7 +118,12 @@ Table 1 contains the summary of variables in the dataset. Fortunately, there are
 
 **Salary**
 ```{r}
+model_orgin = lm(sal_original ~ gender + dept + clin + cert + prate + exper + rank, data = lawsuit)
+boxcox(model_orgin)
+```
+Since $\lambda = 0$, we use log transformation.
 
+```{r}
 p1 = 
   lawsuit %>% 
   ggplot(aes(x = sal_original, y = ..density..)) +
@@ -324,31 +329,7 @@ fit6 = lm(sal9495 ~ gender + rank, data = lawsuit)
 summary(fit6)
 ```
 
-```{r}
-reg2 = lm(sal9495 ~ gender + dept, data = lawsuit)
-summary(reg2)
-```
-
-
-
-
-```{r}
-fit1 = lm(sal9495 ~ gender + dept + clin, data = lawsuit)
-summary(fit1)
-
-fit2 = lm(sal9495 ~ gender + dept + cert, data = lawsuit)
-summary(fit2)
-
-fit3 = lm(sal9495 ~ gender + dept + prate, data = lawsuit)
-summary(fit3)
-
-fit4 = lm(sal9495 ~ gender + dept + exper, data = lawsuit)
-summary(fit4)
-
-fit5 = lm(sal9495 ~ gender + dept + rank, data = lawsuit)
-summary(fit5)
-```
-
+Since the changes of estimate of genderMale are more than 10%, dept, clin, cert and exper are all confounders. So we need to add these covariates into the model.
 
 ```{r}
 reg3 = lm(sal9495 ~ gender + dept + clin + cert  + exper, data = lawsuit)
@@ -357,7 +338,7 @@ summary(reg3)
 ```
 
 
-Add interaction
+Then we add interaction
 ```{r}
 fit1 = lm(sal9495 ~ gender * exper + dept + clin + cert, data = lawsuit)
 summary(fit1)
