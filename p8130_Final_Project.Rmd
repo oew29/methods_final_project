@@ -488,11 +488,43 @@ final_main_model_rank =
 summary(final_main_model_rank)
 ```
 
-
+grank interaction 
 ```{r}
 fit_inter_rank = lm(sal9495 ~ gender * rank + exper + cert + clin + dept, data = lawsuit)
 summary(fit_inter_rank)
 anova(final_main_model_rank,fit_inter_rank)
+par(mfrow = c(2, 2))
+plot(fit_inter_rank)
+```
+
+```{r}
+influence.measures(fit_inter_rank) %>% summary() %>% tidy()
+### 184 outlier
+newlawsuit = lawsuit[-184,]
+model_grank_without184 = lm(sal9495 ~ gender * rank + exper + dept + clin + cert, data = newlawsuit)
+par(mfrow = c(2, 2))
+summary(model_grank_without184 )
+plot(model_grank_without184)
+```
+
+ge interaction 
+```{r}
+fit_inter_ge = lm(sal9495 ~ gender*exper  + rank  + cert + clin + dept, data = lawsuit)
+summary(fit_inter_ge)
+anova(final_main_model_rank, fit_inter_ge)
+par(mfrow = c(2, 2))
+plot(fit_inter_ge)
+```
+
+```{r}
+influence.measures(fit_inter_ge) %>% summary() %>% tidy()
+### 184 outlier
+newlawsuit = lawsuit[-184,]
+model_ge_without184 = lm(sal9495 ~ gender * exper + rank + dept + clin + cert, data = newlawsuit)
+
+summary(model_ge_without184 )
+par(mfrow = c(2, 2))
+plot(model_ge_without184)
 ```
 
 # try adding rank
