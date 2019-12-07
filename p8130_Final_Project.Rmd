@@ -495,6 +495,22 @@ summary(fit_inter_rank)
 anova(final_main_model_rank,fit_inter_rank)
 ```
 
+# try adding rank
+
+```{r}
+final = lm(sal9495 ~ gender + dept + exper + clin + cert+ gender * exper, 
+                      data = lawsuit)
+finalrank = lm(sal9495 ~ gender + dept + exper + clin + cert+ gender * exper+rank, 
+                      data = lawsuit)
+anova(final, finalrank)
+summary(finalrank)
+summary(final)
+
+
+
+```
+
+
 ----------------------------------------
 **Final Model with Interaction:**
 ```{r}
