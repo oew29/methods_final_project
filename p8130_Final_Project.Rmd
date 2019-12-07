@@ -300,6 +300,9 @@ corrplot(res, method = "number",type = "upper", order = "hclust",
 Those imply potential collinearities. As we go through those variables, there are some outliers. In later section, we will examine further about them.
 
 ## Method
+```{r}
+summary(lm(sal9495 ~ rank, data = lawsuit))
+```
 
 ```{r}
 reg1 = lm(sal9495 ~ gender, data = lawsuit)
@@ -422,15 +425,13 @@ Therefore, we need to add cert in the model.
 
 **Final main effect model:**
 ```{r}
-final_main_model = lm(sal9495 ~ gender + dept + exper + clin + cert, 
+final_main_model = lm(sal9495 ~ gender + dept + exper + clin + cert , 
                       data = lawsuit)
 summary(final_main_model)
 ```
 
 
 **add interaction**
-
-
 
 ```{r}
 fit_inter1 = lm(sal9495 ~ gender * dept +  exper  + clin + cert, data = lawsuit)
@@ -477,7 +478,24 @@ And partial F test p value > 0.05
 no interaction between gender and cert.
 
 
+------------------
 
+**Add Rank** 
+
+```{r}
+final_main_model_rank = 
+  lm(sal9495 ~ gender + rank + exper + cert + clin + dept, data = lawsuit)
+summary(final_main_model_rank)
+```
+
+
+```{r}
+fit_inter_rank = lm(sal9495 ~ gender * rank + exper + cert + clin + dept, data = lawsuit)
+summary(fit_inter_rank)
+anova(final_main_model_rank,fit_inter_rank)
+```
+
+----------------------------------------
 **Final Model with Interaction:**
 ```{r}
 final_model = lm(sal9495 ~ gender * exper + dept + clin + cert, data = lawsuit)
