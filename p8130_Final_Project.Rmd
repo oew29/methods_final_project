@@ -300,9 +300,6 @@ corrplot(res, method = "number",type = "upper", order = "hclust",
 Those imply potential collinearities. As we go through those variables, there are some outliers. In later section, we will examine further about them.
 
 ## Method
-```{r}
-summary(lm(sal9495 ~ rank, data = lawsuit))
-```
 
 ```{r}
 reg1 = lm(sal9495 ~ gender, data = lawsuit)
@@ -348,6 +345,7 @@ From linear regression results, rank is not signifiant. From partial F test, p i
 Since the changes of estimate of genderMale are more than 10% and all p-values from partial F test are less than 0.05, dept, clin, cert and exper are all confounders. So we need to add these covariates into the model.
 
 
+
 First we need to add department....
 ```{r}
 reg2 = lm(sal9495 ~ gender + dept, data = lawsuit)
@@ -370,14 +368,21 @@ anova(reg2,fit_gdcert)
 ```
 
 
-
-
 ```{r}
 ## add exper
 fit_gde = lm(sal9495 ~ gender + dept + exper, data = lawsuit)
 summary(fit_gde)
 anova(reg2,fit_gde)
 ```
+
+```{r}
+## add rank
+fit_gdr = lm(sal9495 ~ gender + dept + rank, data = lawsuit)
+summary(fit_gdr)
+anova(reg2,fit_gdr)
+```
+
+
 
 Result: Compared with other covariates, F value of adding exper is the largest. So we add exper into our model.
 
@@ -401,6 +406,13 @@ summary(fit_gdecert)
 anova(reg3,fit_gdecert)
 ```
 
+```{r}
+## add rank
+fit_gderank = lm(sal9495 ~ gender + dept + exper + rank, data = lawsuit)
+summary(fit_gderank)
+anova(reg3,fit_gderank)
+```
+
 Result: Compared with other covariates, F value of adding clin is the largest. So we add exper into our model.
 
 ```{r}
@@ -417,76 +429,85 @@ summary(fit_gdeclin_cert)
 anova(reg4,fit_gdeclin_cert)
 ```
 
+
+```{r}
+## add rank
+fit_gdeclin_rank = lm(sal9495 ~ gender + dept + exper + clin + rank, data = lawsuit)
+summary(fit_gdeclin_rank)
+anova(reg4,fit_gdeclin_rank)
+```
+Result: Compared with other covariates, F value of adding cert is the largest. So we add cert into our model.
+
+```{r}
+reg5 =  lm(sal9495 ~ gender + dept + exper + clin + cert, data = lawsuit)
+summary(reg5)
+```
+
+
+```{r}
+## add rank
+fit_gdeclin_cert_rank = lm(sal9495 ~ gender + dept + exper + clin + cert + rank, data = lawsuit)
+summary(fit_gdeclin_cert_rank)
+anova(reg5,fit_gdeclin_cert_rank)
+```
+
+
 Result:
 
 p value of partial F test is more than 0.05, which shows that the model adding cert is superior.
 Therefore, we need to add cert in the model.
 
 
-**Final main effect model:**
-```{r}
-final_main_model = lm(sal9495 ~ gender + dept + exper + clin + cert , 
-                      data = lawsuit)
-summary(final_main_model)
-```
-
-
-**add interaction**
-
-```{r}
-fit_inter1 = lm(sal9495 ~ gender * dept +  exper  + clin + cert, data = lawsuit)
-summary(fit_inter1)
-anova(final_main_model,fit_inter1)
-```
-
-Interaction terms are not significant since p values are more than 0.05.
-
-And partial F test p value > 0.05   
-no interaction between gender and department.
-
-```{r}
-fit_inter2 = lm(sal9495 ~ gender * exper + dept + clin + cert, data = lawsuit)
-summary(fit_inter2)
-anova(final_main_model,fit_inter2)
-```
-
-genderMale:exper is significant since p value is less than 0.05.
-
-partial F test p value < 0.05 
-interaction between gender and exper is significant.
-
-```{r}
-fit_inter3 = lm(sal9495 ~ gender * clin +  exper + cert + dept, data = lawsuit)
-summary(fit_inter3)
-anova(final_main_model,fit_inter3)
-```
-
-???? wierd no main effect
-
-
-
-
-```{r}
-fit_inter4 = lm(sal9495 ~ gender * cert +  exper + clin + dept, data = lawsuit)
-summary(fit_inter4)
-anova(final_main_model,fit_inter4)
-```
-
-Interaction term is not significant since p value is more than 0.05.
-
-And partial F test p value > 0.05   
-no interaction between gender and cert.
-
-
-------------------
-
-**Add Rank** 
-
 ```{r}
 final_main_model_rank = 
-  lm(sal9495 ~ gender + rank + exper + cert + clin + dept, data = lawsuit)
+  lm(sal9495 ~ gender + dept + exper + cert + clin + rank, data = lawsuit)
 summary(final_main_model_rank)
 ```
+
+## add rank main effect  + interaction 
+```{r}
+fit_inter_1_rank = lm(sal9495 ~ gender * dept +  exper  + clin + cert + rank, data = lawsuit)
+summary(fit_inter_1_rank)
+anova(final_main_model_rank,fit_inter_1_rank)
+```
+
+not significant
+
+```{r}
+fit_inter_2_rank = lm(sal9495 ~ gender * exper +  dept  + clin + cert + rank, data = lawsuit)
+summary(fit_inter_2_rank)
+anova(final_main_model_rank,fit_inter_2_rank)
+```
+
+significant
+
+```{r}
+fit_inter_3_rank = lm(sal9495 ~ gender * clin +  dept  + exper + cert + rank, data = lawsuit)
+summary(fit_inter_3_rank)
+anova(final_main_model_rank,fit_inter_3_rank)
+```
+
+not significant
+
+
+```{r}
+fit_inter_4_rank = lm(sal9495 ~ gender * cert +  dept  + exper + clin + rank, data = lawsuit)
+summary(fit_inter_4_rank)
+anova(final_main_model_rank,fit_inter_4_rank)
+```
+not significant
+
+
+```{r}
+fit_inter_5_rank = lm(sal9495 ~ gender * rank +  dept  + exper + clin + cert, data = lawsuit)
+summary(fit_inter_5_rank)
+anova(final_main_model_rank,fit_inter_5_rank)
+```
+significant.
+
+
+-----------------------------------------
+**Compare with two interaction!!**
 
 grank interaction 
 ```{r}
@@ -495,16 +516,6 @@ summary(fit_inter_rank)
 anova(final_main_model_rank,fit_inter_rank)
 par(mfrow = c(2, 2))
 plot(fit_inter_rank)
-```
-
-```{r}
-influence.measures(fit_inter_rank) %>% summary() %>% tidy()
-### 184 outlier
-newlawsuit = lawsuit[-184,]
-model_grank_without184 = lm(sal9495 ~ gender * rank + exper + dept + clin + cert, data = newlawsuit)
-par(mfrow = c(2, 2))
-summary(model_grank_without184 )
-plot(model_grank_without184)
 ```
 
 ge interaction 
@@ -516,8 +527,32 @@ par(mfrow = c(2, 2))
 plot(fit_inter_ge)
 ```
 
+gerank
+
 ```{r}
-influence.measures(fit_inter_ge) %>% summary() %>% tidy()
+fit_inter_gerank = lm(sal9495 ~ gender*exper  + gender*rank  + cert + clin + dept, data = lawsuit)
+summary(fit_inter_gerank)
+anova(fit_inter_ge, fit_inter_gerank)
+par(mfrow = c(2, 2))
+plot(fit_inter_ge)
+```
+
+```{r}
+AIC(fit_inter_ge) ## gender*exper
+AIC(fit_inter_gerank) ## gender*rank
+```
+
+
+----------------------------------------
+**Final Model with Interaction:**
+```{r}
+final_model = lm(sal9495 ~ gender * exper + dept + clin + cert + rank, data = lawsuit)
+summary(final_model)
+```
+
+**Remove outlier**
+```{r}
+influence.measures(final_model) %>% summary() %>% tidy()
 ### 184 outlier
 newlawsuit = lawsuit[-184,]
 model_ge_without184 = lm(sal9495 ~ gender * exper + rank + dept + clin + cert, data = newlawsuit)
@@ -527,56 +562,22 @@ par(mfrow = c(2, 2))
 plot(model_ge_without184)
 ```
 
-# try adding rank
-
-```{r}
-final = lm(sal9495 ~ gender + dept + exper + clin + cert+ gender * exper, 
-                      data = lawsuit)
-finalrank = lm(sal9495 ~ gender + dept + exper + clin + cert+ gender * exper+rank, 
-                      data = lawsuit)
-anova(final, finalrank)
-summary(finalrank)
-summary(final)
-
-
-
-```
-
-
-----------------------------------------
-**Final Model with Interaction:**
-```{r}
-final_model = lm(sal9495 ~ gender * exper + dept + clin + cert, data = lawsuit)
-summary(final_model)
-par(mfrow = c(2, 2))
-plot(final_model)
-
-influence.measures(final_model) %>% 
-  summary() %>% kable()
-
-```
-
-**Remove outlier**
-```{r}
-newlawsuit = lawsuit[-184,]
-final_model_without184 = lm(sal9495 ~ gender * exper + dept + clin + cert, data = newlawsuit)
-summary(final_model_without184 )
-plot(final_model_without184)
-```
 
 Stratification: 
 ```{r}
 male_data = newlawsuit %>% filter(gender == "Male") 
-male_model = lm(sal9495 ~ exper + dept + clin + cert, data = male_data)
+male_model = lm(sal9495 ~ exper + dept + clin + cert + rank, data = male_data)
 summary(male_model)
 par(mfrow = c(2, 2))
 plot(male_model)
+
+
 ```
 
 
 ```{r}
 female_data = newlawsuit %>% filter(gender == "Female") 
-female_model = lm(sal9495 ~ exper + dept + clin + cert, data = female_data)
+female_model = lm(sal9495 ~ exper + dept + clin + cert + rank, data = female_data)
 summary(female_model)
 par(mfrow = c(2, 2))
 plot(female_model)
