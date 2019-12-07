@@ -511,11 +511,11 @@ significant.
 
 grank interaction 
 ```{r}
-fit_inter_rank = lm(sal9495 ~ gender * rank + exper + cert + clin + dept, data = lawsuit)
-summary(fit_inter_rank)
-anova(final_main_model_rank,fit_inter_rank)
+fit_inter_grank = lm(sal9495 ~ gender * rank + exper + cert + clin + dept, data = lawsuit)
+summary(fit_inter_grank)
+anova(final_main_model_rank,fit_inter_grank)
 par(mfrow = c(2, 2))
-plot(fit_inter_rank)
+plot(fit_inter_grank)
 ```
 
 ge interaction 
@@ -532,15 +532,33 @@ gerank
 ```{r}
 fit_inter_gerank = lm(sal9495 ~ gender*exper  + gender*rank  + cert + clin + dept, data = lawsuit)
 summary(fit_inter_gerank)
-anova(fit_inter_ge, fit_inter_gerank)
-par(mfrow = c(2, 2))
-plot(fit_inter_ge)
+
 ```
+
+
+Compare gender* rank and gender* exper +gender *rank
+```{r}
+anova(fit_inter_grank,fit_inter_gerank)
+```
+
+Compare gender* exper and gender* exper +gender *rank
+```{r}
+anova(fit_inter_ge, fit_inter_gerank)
+```
+
+
+
 
 ```{r}
 AIC(fit_inter_ge) ## gender*exper
-AIC(fit_inter_gerank) ## gender*rank
+AIC(fit_inter_grank) ## gender*rank
 ```
+
+**Results**
+
+gender * exper helps in the model, gender * rank not. 
+Choose interaction gender * exper.
+
 
 
 ----------------------------------------
