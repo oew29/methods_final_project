@@ -582,6 +582,78 @@ plot(model_ge_without184)
 
 
 Stratification: 
+
+```{r}
+
+fit_rank = lm(sal9495 ~ gender*rank+dept+clin+cert+exper+gender*exper, data = lawsuit)
+summary(fit_rank)
+anova(final_model,fit_rank)
+```
+## on rank
+```{r}
+# Associate
+associate_fit = lawsuit %>% 
+  filter(rank == "Associate") %>% 
+  lm(sal9495 ~ gender+dept+clin+cert+exper, data = .)
+summary(associate_fit)
+
+# Assistant
+assistant_fit = lawsuit %>% 
+  filter(rank == "Assistant") %>% 
+  lm(sal9495 ~ gender+dept+clin+cert+exper, data = .)
+summary(assistant_fit)
+
+# Professor
+prof_fit = lawsuit %>% 
+  filter(rank == "Full professor") %>%
+  lm(sal9495 ~ gender+dept+clin+cert+exper, data = .)
+summary(prof_fit)
+```
+
+Gender is only significant in assistant professors' salary.
+
+## on exper
+```{r}
+exper = lawsuit %>% 
+  mutate(experience = ifelse(exper<5, "0",
+                             ifelse(exper<10&exper>=5, "1",
+                                    ifelse(exper<14&exper>=10,"2","3"))),
+         experience = factor(experience))
+
+```
+
+```{r}
+
+# experience 0-5 years
+experience0 = exper %>% 
+  filter(experience == "0") %>% 
+  lm(sal9495 ~ gender+dept+clin+cert+rank, data = .)
+summary(experience0)
+
+# experience 5-10
+experience1 = exper %>% 
+  filter(experience == "1") %>% 
+  lm(sal9495 ~ gender+dept+clin+cert+rank, data = .)
+summary(experience1)
+
+# experience 10-14
+experience2 = exper %>% 
+  filter(experience == "2") %>% 
+  lm(sal9495 ~ gender+dept+clin+cert+rank, data = .)
+summary(experience2)
+
+# experience >14
+experience3 = exper %>% 
+  filter(experience == "3") %>% 
+  lm(sal9495 ~ gender+dept+clin+cert+rank, data = .)
+summary(experience3)
+
+```
+
+Gender does not play a huge role in different levels of experience.
+
+## on gender
+
 ```{r}
 male_data = newlawsuit %>% filter(gender == "Male") 
 male_model = lm(sal9495 ~ exper + dept + clin + cert + rank, data = male_data)
