@@ -326,11 +326,9 @@ anova(reg1,fit3)
 ```
 
 ```{r}
-
 fit4 = lm(sal9495 ~ gender + exper, data = lawsuit)
 summary(fit4)
 anova(reg1,fit4)
-
 ```
 
 ```{r}
@@ -506,65 +504,11 @@ anova(final_main_model_rank,fit_inter_5_rank)
 significant.
 
 
------------------------------------------
-**Compare with two interaction!!**
-
-grank interaction 
-```{r}
-fit_inter_grank = lm(sal9495 ~ gender * rank + exper + cert + clin + dept, data = lawsuit)
-summary(fit_inter_grank)
-anova(final_main_model_rank,fit_inter_grank)
-par(mfrow = c(2, 2))
-plot(fit_inter_grank)
-```
-
-ge interaction 
-```{r}
-fit_inter_ge = lm(sal9495 ~ gender*exper  + rank  + cert + clin + dept, data = lawsuit)
-summary(fit_inter_ge)
-anova(final_main_model_rank, fit_inter_ge)
-par(mfrow = c(2, 2))
-plot(fit_inter_ge)
-```
-
-gerank
-
-```{r}
-fit_inter_gerank = lm(sal9495 ~ gender*exper  + gender*rank  + cert + clin + dept, data = lawsuit)
-summary(fit_inter_gerank)
-
-```
-
-
-Compare gender* rank and gender* exper +gender *rank
-```{r}
-anova(fit_inter_grank,fit_inter_gerank)
-```
-
-Compare gender* exper and gender* exper +gender *rank
-```{r}
-anova(fit_inter_ge, fit_inter_gerank)
-```
-
-
-
-
-```{r}
-AIC(fit_inter_ge) ## gender*exper
-AIC(fit_inter_grank) ## gender*rank
-```
-
-**Results**
-
-gender * exper helps in the model, gender * rank not. 
-Choose interaction gender * exper.
-
-
 
 ----------------------------------------
 **Final Model with Interaction:**
 ```{r}
-final_model = lm(sal9495 ~ gender * exper + dept + clin + cert + rank, data = lawsuit)
+final_model = lm(sal9495 ~ gender * rank + dept + clin + cert + rank, data = lawsuit)
 summary(final_model)
 ```
 
@@ -583,12 +527,6 @@ plot(model_ge_without184)
 
 Stratification: 
 
-```{r}
-
-fit_rank = lm(sal9495 ~ gender*rank+dept+clin+cert+exper+gender*exper, data = lawsuit)
-summary(fit_rank)
-anova(final_model,fit_rank)
-```
 ## on rank
 ```{r}
 # Associate
@@ -611,69 +549,6 @@ summary(prof_fit)
 ```
 
 Gender is only significant in assistant professors' salary.
-
-## on exper
-```{r}
-exper = lawsuit %>% 
-  mutate(experience = ifelse(exper<5, "0",
-                             ifelse(exper<10&exper>=5, "1",
-                                    ifelse(exper<14&exper>=10,"2","3"))),
-         experience = factor(experience))
-
-```
-
-```{r}
-
-# experience 0-5 years
-experience0 = exper %>% 
-  filter(experience == "0") %>% 
-  lm(sal9495 ~ gender+dept+clin+cert+rank, data = .)
-summary(experience0)
-
-# experience 5-10
-experience1 = exper %>% 
-  filter(experience == "1") %>% 
-  lm(sal9495 ~ gender+dept+clin+cert+rank, data = .)
-summary(experience1)
-
-# experience 10-14
-experience2 = exper %>% 
-  filter(experience == "2") %>% 
-  lm(sal9495 ~ gender+dept+clin+cert+rank, data = .)
-summary(experience2)
-
-# experience >14
-experience3 = exper %>% 
-  filter(experience == "3") %>% 
-  lm(sal9495 ~ gender+dept+clin+cert+rank, data = .)
-summary(experience3)
-
-```
-
-Gender does not play a huge role in different levels of experience.
-
-## on gender
-
-```{r}
-male_data = newlawsuit %>% filter(gender == "Male") 
-male_model = lm(sal9495 ~ exper + dept + clin + cert + rank, data = male_data)
-summary(male_model)
-par(mfrow = c(2, 2))
-plot(male_model)
-
-
-```
-
-
-```{r}
-female_data = newlawsuit %>% filter(gender == "Female") 
-female_model = lm(sal9495 ~ exper + dept + clin + cert + rank, data = female_data)
-summary(female_model)
-par(mfrow = c(2, 2))
-plot(female_model)
-```
-
-## Results
 
 ## Conclusions
 
