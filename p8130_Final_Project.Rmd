@@ -508,7 +508,7 @@ significant.
 ----------------------------------------
 **Final Model with Interaction:**
 ```{r}
-final_model = lm(sal9495 ~ gender * rank + dept + clin + cert + rank, data = lawsuit)
+final_model = lm(sal9495 ~ gender * rank + exper+ dept + clin + cert + rank, data = lawsuit)
 summary(final_model)
 ```
 
@@ -517,7 +517,7 @@ summary(final_model)
 influence.measures(final_model) %>% summary() %>% tidy()
 ### 184 outlier
 newlawsuit = lawsuit[-184,]
-model_ge_without184 = lm(sal9495 ~ gender * exper + rank + dept + clin + cert, data = newlawsuit)
+model_ge_without184 = lm(sal9495 ~ gender * rank + exper+ dept + clin + cert + rank, data = lawsuit)
 
 summary(model_ge_without184 )
 par(mfrow = c(2, 2))
